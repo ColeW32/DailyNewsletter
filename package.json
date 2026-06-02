@@ -1,0 +1,31 @@
+{
+  "name": "survey-club-newsletter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Daily AI-written newsletter for Survey Club",
+  "scripts": {
+    "generate": "tsx src/index.ts",
+    "preview": "tsx src/index.ts --dry-run",
+    "send": "tsx src/index.ts --send-saved",
+    "collect": "tsx src/index.ts --collect-only",
+    "preview:mock": "tsx scripts/mockPreview.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.100.1",
+    "cheerio": "^1.2.0",
+    "dotenv": "^17.4.2",
+    "resend": "^6.12.4",
+    "rss-parser": "^3.13.0",
+    "yahoo-finance2": "^3.15.2"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
+  }
+}

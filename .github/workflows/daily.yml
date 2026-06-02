@@ -1,0 +1,32 @@
+name: Daily Newsletter
+
+on:
+  schedule:
+    # Cron is UTC and has no daylight-saving awareness, so we fire at BOTH
+    # 14:30 and 15:30 UTC. The app's SEND_ONLY_AT_ET_HOUR=10 guard then lets
+    # exactly one of them through — whichever is 10:30am America/New_York.
+    - cron: '30 14 * * *'
+    - cron: '30 15 * * *'
+  workflow_dispatch: {} # lets you run it manually from the Actions tab
+
+concurrency:
+  group: daily-newsletter
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Generate & send the newsletter
+        run: npm run generate
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          SEND_ONLY_AT_ET_HOUR: '10'
