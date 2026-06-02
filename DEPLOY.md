@@ -35,15 +35,9 @@ That's it — the `From`, recipient, and 10am-ET guard are baked into the code.
 
 ## 3. Test it
 
-**Actions** tab → **Daily Newsletter** → **Run workflow** (manual trigger). It runs
-the full pipeline immediately, ignoring the time guard only if you remove
-`SEND_ONLY_AT_ET_HOUR` — otherwise a manual run outside 10am ET will politely skip.
-To force a test send any time, run **Run workflow** and it'll send (manual dispatch
-isn't time-gated by cron, but the app guard still applies — see note below).
-
-> **Time guard note:** the app only sends when it's the 10 o'clock hour in ET. For
-> an anytime manual test, temporarily set the repo secret/var `SEND_ONLY_AT_ET_HOUR`
-> to the current ET hour, or just run `npm run generate` locally.
+**Actions** tab → **Daily Newsletter** → **Run workflow**. A manual run **sends
+immediately** (it bypasses the time guard), so this is your full end-to-end test —
+check your inbox. Scheduled runs, by contrast, only send at **10:30am ET**.
 
 ## 4. It's live
 

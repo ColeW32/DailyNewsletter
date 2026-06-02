@@ -29,4 +29,6 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          SEND_ONLY_AT_ET_HOUR: '10'
+          # Scheduled runs only fire at 10:30am ET (guard on). A manual
+          # "Run workflow" leaves it empty, so it sends immediately — handy for testing.
+          SEND_ONLY_AT_ET_HOUR: ${{ github.event_name == 'schedule' && '10' || '' }}
