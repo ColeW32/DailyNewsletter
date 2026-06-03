@@ -1,0 +1,19 @@
+name: Resend Diagnostic
+on:
+  workflow_dispatch: {}
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe Resend from the runner
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: |
+          echo "key fingerprint: ${RESEND_API_KEY:0:6}...${RESEND_API_KEY: -4}  (len=${#RESEND_API_KEY})"
+          echo "--- GET /broadcasts ---"
+          curl -s -o /tmp/r -w "status=%{http_code}\n" https://api.resend.com/broadcasts -H "Authorization: Bearer $RESEND_API_KEY"; head -c 400 /tmp/r; echo
+          echo "--- POST /broadcasts (minimal) ---"
+          curl -s -o /tmp/c -w "status=%{http_code}\n" -X POST https://api.resend.com/broadcasts \
+            -H "Authorization: Bearer $RESEND_API_KEY" -H "Content-Type: application/json" \
+            -d '{"audience_id":"74e55033-fd6f-482e-ad57-65e4fe798a54","from":"Survey Club Daily <daily@daily.getsurvey.club>","subject":"diag","html":"<p>hi {{{RESEND_UNSUBSCRIBE_URL}}}</p>"}'
+          head -c 400 /tmp/c; echo
