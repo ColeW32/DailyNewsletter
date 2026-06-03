@@ -35,3 +35,38 @@ export async function sendAlert(subject: string, text: string): Promise<void> {
     console.log(`(Could not send alert: ${(e as Error).message})`);
   }
 }
+
+/**
+ * Create + send a Resend Broadcast to the whole Audience. The HTML must contain
+ * the `{{{RESEND_UNSUBSCRIBE_URL}}}` token (the template adds it in broadcast mode).
+ * Returns the broadcast id.
+ */
+export async function sendBroadcast(opts: { subject: string; html: string }): Promise<string | undefined> {
+  const apiKey = config.resendApiKey();
+  if (!config.audienceId) throw new Error('RESEND_AUDIENCE_ID is not set — cannot broadcast.');
+  const headers = { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
+
+  const createRes = await fetch('https://api.resend.com/broadcasts', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      audience_id: config.audienceId,
+      from: config.from,
+      subject: opts.subject,
+      html: opts.html,
+      name: `Daily Brief — ${opts.subject}`,
+    }),
+  });
+  const created: any = await createRes.json().catch(() => ({}));
+  if (!createRes.ok) throw new Error(`Broadcast create failed: ${JSON.stringify(created)}`);
+  const id = created?.id ?? created?.data?.id;
+  if (!id) throw new Error(`Broadcast create returned no id: ${JSON.stringify(created)}`);
+
+  const sendRes = await fetch(`https://api.resend.com/broadcasts/${id}/send`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({}),
+  });
+  if (!sendRes.ok) throw new Error(`Broadcast send failed: ${await sendRes.text()}`);
+  return id;
+}

@@ -29,6 +29,11 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          # Set these two repo *Variables* to go live to the whole list:
+          #   SEND_MODE=broadcast  and  RESEND_AUDIENCE_ID=<your audience id>
+          # Unset → stays in test mode (emails NEWSLETTER_TO).
+          SEND_MODE: ${{ vars.SEND_MODE }}
+          RESEND_AUDIENCE_ID: ${{ vars.RESEND_AUDIENCE_ID }}
           # Scheduled runs only fire at 10:30am ET (guard on). A manual
           # "Run workflow" leaves it empty, so it sends immediately — handy for testing.
           SEND_ONLY_AT_ET_HOUR: ${{ github.event_name == 'schedule' && '10' || '' }}

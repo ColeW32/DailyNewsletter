@@ -44,12 +44,20 @@ check your inbox. Scheduled runs, by contrast, only send at **10:30am ET**.
 From then on it sends automatically at **10:30am ET every day** (the two UTC crons
 + the ET guard handle daylight saving for you).
 
-## Current recipient
+## Going live to subscribers
 
-Until we wire up the real subscriber list, the scheduled run sends to
-`NEWSLETTER_TO` (your address). When you're ready, we switch it to a **Resend
-Broadcast** to your Audience (with automatic unsubscribes) — that needs your
-subscriber CSV + a physical mailing address for the footer.
+By default the scheduled run sends to `NEWSLETTER_TO` (you) — test mode. To send to
+the whole **Audience** instead, add two **repository variables** (Settings → Secrets
+and variables → Actions → **Variables** tab):
+
+| Variable | Value |
+| --- | --- |
+| `SEND_MODE` | `broadcast` |
+| `RESEND_AUDIENCE_ID` | `74e55033-fd6f-482e-ad57-65e4fe798a54` |
+
+The daily run then creates a **Resend Broadcast** to the Audience, with an automatic
+unsubscribe link + the mailing address in the footer. Remove the variables (or set
+`SEND_MODE` back to `self`) to return to test mode.
 
 ## If a run fails
 

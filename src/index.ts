@@ -3,7 +3,7 @@ import { collectSources } from './sources';
 import { writeNewsletter } from './writer/writeNewsletter';
 import { enrichWithResearch } from './writer/enrich';
 import { renderNewsletter } from './email/template';
-import { sendEmail, sendAlert } from './email/send';
+import { sendEmail, sendAlert, sendBroadcast } from './email/send';
 import { longDateET } from './utils/date';
 import { config } from './config';
 
@@ -71,7 +71,11 @@ async function main() {
   console.log('\n✍️  Writing the newsletter with Claude...');
   const label = longDateET();
   const nl = await writeNewsletter(enriched, label);
-  const html = renderNewsletter(nl, enriched, label);
+  const broadcast = config.sendMode === 'broadcast';
+  const html = renderNewsletter(nl, enriched, label, {
+    mailingAddress: config.mailingAddress,
+    unsubscribeHref: broadcast ? '{{{RESEND_UNSUBSCRIBE_URL}}}' : '#',
+  });
 
   if (dryRun) {
     mkdirSync('out', { recursive: true });
@@ -84,9 +88,15 @@ async function main() {
     return;
   }
 
-  console.log(`\n📨 Sending to ${config.to}...`);
-  const id = await sendEmail({ subject: nl.subject, html });
-  console.log(`✅ Sent!${id ? ` (id: ${id})` : ''}`);
+  if (broadcast) {
+    console.log('\n📣 Sending Broadcast to the Audience...');
+    const id = await sendBroadcast({ subject: nl.subject, html });
+    console.log(`✅ Broadcast sent!${id ? ` (id: ${id})` : ''}`);
+  } else {
+    console.log(`\n📨 Sending to ${config.to}...`);
+    const id = await sendEmail({ subject: nl.subject, html });
+    console.log(`✅ Sent!${id ? ` (id: ${id})` : ''}`);
+  }
 }
 
 main().catch(async (err) => {

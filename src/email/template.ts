@@ -121,6 +121,7 @@ export function renderNewsletter(
   nl: Newsletter,
   sources: SourceData[],
   dateLabel: string,
+  opts: { unsubscribeHref?: string; mailingAddress?: string } = {},
 ): string {
   const byId = new Map(sources.map((s) => [s.id, s]));
   const order = sources.map((s) => s.id);
@@ -167,7 +168,8 @@ ${renderCta()}
 
 <tr><td style="padding:24px 32px 32px;">
   <p style="margin:0;font-size:12px;line-height:1.5;color:${C.muted};">You're reading the Survey Club Daily Brief — curated from public sources and written up by AI. Double-check anything before you bet the farm on it.</p>
-  <p style="margin:10px 0 0;font-size:12px;color:${C.muted};"><a href="{{unsubscribe}}" style="color:${C.muted};text-decoration:underline;">Unsubscribe</a></p>
+  ${opts.mailingAddress ? `<p style="margin:10px 0 0;font-size:12px;color:${C.muted};">Survey Club · ${esc(opts.mailingAddress)}</p>` : ''}
+  <p style="margin:6px 0 0;font-size:12px;color:${C.muted};"><a href="${esc(opts.unsubscribeHref ?? '#')}" style="color:${C.muted};text-decoration:underline;">Unsubscribe</a></p>
 </td></tr>
 
 </table>

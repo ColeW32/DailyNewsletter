@@ -25,6 +25,10 @@ export const config = {
   from: process.env.NEWSLETTER_FROM ?? 'Survey Club Daily <daily@daily.getsurvey.club>',
   to: process.env.NEWSLETTER_TO ?? 'jason@abstrakt.group',
   adminEmail: process.env.ADMIN_EMAIL ?? process.env.NEWSLETTER_TO ?? 'jason@abstrakt.group',
+  audienceId: process.env.RESEND_AUDIENCE_ID,
+  mailingAddress: process.env.MAILING_ADDRESS ?? '3423 Piedmont Rd NE, Atlanta, GA 30305',
+  // 'self' = email NEWSLETTER_TO (test mode); 'broadcast' = Resend Broadcast to the Audience.
+  sendMode: process.env.SEND_MODE ?? 'self',
   polygonApiKey: process.env.POLYGON_API_KEY,
   fmpApiKey: process.env.FMP_API_KEY,
 };
