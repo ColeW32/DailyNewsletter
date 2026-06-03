@@ -79,15 +79,20 @@ export async function sendBroadcast(opts: { subject: string; html: string }): Pr
   if (!config.audienceId) throw new Error('RESEND_AUDIENCE_ID is not set — cannot broadcast.');
   const headers = { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
 
-  const createRes = await resendPost('https://api.resend.com/broadcasts', headers, {
+  const createBody = {
     audience_id: config.audienceId,
     from: config.from,
     subject: opts.subject,
     html: sanitizeBroadcastHtml(opts.html),
     name: `Daily Brief — ${opts.subject}`,
-  });
+  };
+  const createRes = await resendPost('https://api.resend.com/broadcasts', headers, createBody);
   const created: any = await createRes.json().catch(() => ({}));
-  if (!createRes.ok) throw new Error(`Broadcast create failed (${createRes.status}): ${JSON.stringify(created)}`);
+  if (!createRes.ok) {
+    // TEMP diagnostic: dump the exact failing payload so it can be replayed.
+    console.log('BROADCAST_FAIL_BODY_B64:' + Buffer.from(JSON.stringify(createBody)).toString('base64'));
+    throw new Error(`Broadcast create failed (${createRes.status}): ${JSON.stringify(created)}`);
+  }
   const id = created?.id ?? created?.data?.id;
   if (!id) throw new Error(`Broadcast create returned no id: ${JSON.stringify(created)}`);
 
