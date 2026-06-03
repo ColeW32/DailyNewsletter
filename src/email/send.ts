@@ -60,7 +60,7 @@ async function resendPost(
   url: string,
   headers: Record<string, string>,
   body: unknown,
-  attempts = 3,
+  attempts = 5,
 ): Promise<Response> {
   let res!: Response;
   for (let i = 0; i < attempts; i++) {
@@ -88,11 +88,7 @@ export async function sendBroadcast(opts: { subject: string; html: string }): Pr
   };
   const createRes = await resendPost('https://api.resend.com/broadcasts', headers, createBody);
   const created: any = await createRes.json().catch(() => ({}));
-  if (!createRes.ok) {
-    // TEMP diagnostic: dump the exact failing payload so it can be replayed.
-    console.log('BROADCAST_FAIL_BODY_B64:' + Buffer.from(JSON.stringify(createBody)).toString('base64'));
-    throw new Error(`Broadcast create failed (${createRes.status}): ${JSON.stringify(created)}`);
-  }
+  if (!createRes.ok) throw new Error(`Broadcast create failed (${createRes.status}): ${JSON.stringify(created)}`);
   const id = created?.id ?? created?.data?.id;
   if (!id) throw new Error(`Broadcast create returned no id: ${JSON.stringify(created)}`);
 
@@ -110,9 +106,11 @@ export async function broadcastSentToday(): Promise<boolean> {
     if (!r.ok) return false;
     const j: any = await r.json();
     const today = new Date().toISOString().slice(0, 10);
-    return (j?.data ?? []).some(
-      (b: any) => String(b.created_at || '').slice(0, 10) === today,
-    );
+    return (j?.data ?? []).some((b: any) => {
+      const createdToday = String(b.created_at || '').slice(0, 10) === today;
+      const wasSent = b.sent_at != null || ['sent', 'sending'].includes(b.status);
+      return createdToday && wasSent; // only an actually-sent broadcast blocks (ignore drafts)
+    });
   } catch {
     return false; // on error, don't block the day's send
   }
