@@ -70,3 +70,20 @@ export async function sendBroadcast(opts: { subject: string; html: string }): Pr
   if (!sendRes.ok) throw new Error(`Broadcast send failed: ${await sendRes.text()}`);
   return id;
 }
+
+/** True if a broadcast was already created today (UTC) — guards against double-sends. */
+export async function broadcastSentToday(): Promise<boolean> {
+  try {
+    const r = await fetch('https://api.resend.com/broadcasts', {
+      headers: { Authorization: `Bearer ${config.resendApiKey()}` },
+    });
+    if (!r.ok) return false;
+    const j: any = await r.json();
+    const today = new Date().toISOString().slice(0, 10);
+    return (j?.data ?? []).some(
+      (b: any) => String(b.created_at || '').slice(0, 10) === today,
+    );
+  } catch {
+    return false; // on error, don't block the day's send
+  }
+}

@@ -3,7 +3,7 @@ import { collectSources } from './sources';
 import { writeNewsletter } from './writer/writeNewsletter';
 import { enrichWithResearch } from './writer/enrich';
 import { renderNewsletter } from './email/template';
-import { sendEmail, sendAlert, sendBroadcast } from './email/send';
+import { sendEmail, sendAlert, sendBroadcast, broadcastSentToday } from './email/send';
 import { longDateET } from './utils/date';
 import { config } from './config';
 
@@ -21,21 +21,6 @@ async function main() {
     const id = await sendEmail({ subject: meta.subject, html });
     console.log(`✅ Sent!${id ? ` (id: ${id})` : ''}`);
     return;
-  }
-
-  // In CI the cron fires at two UTC times to cover daylight saving; only proceed
-  // at the intended ET hour so we send exactly once/day at ~10:30am ET.
-  const onlyHour = process.env.SEND_ONLY_AT_ET_HOUR;
-  if (onlyHour) {
-    const nyHour = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/New_York',
-      hour: '2-digit',
-      hour12: false,
-    }).format(new Date());
-    if (parseInt(nyHour, 10) !== parseInt(onlyHour, 10)) {
-      console.log(`Skipping: it's ${nyHour}:00 ET, not ${onlyHour}:00 ET.`);
-      return;
-    }
   }
 
   console.log('📡 Collecting sources...');
@@ -89,6 +74,10 @@ async function main() {
   }
 
   if (broadcast) {
+    if (await broadcastSentToday()) {
+      console.log('⏭️  A broadcast already went out today — skipping to avoid a duplicate.');
+      return;
+    }
     console.log('\n📣 Sending Broadcast to the Audience...');
     const id = await sendBroadcast({ subject: nl.subject, html });
     console.log(`✅ Broadcast sent!${id ? ` (id: ${id})` : ''}`);

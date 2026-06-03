@@ -35,9 +35,10 @@ That's it — the `From`, recipient, and 10am-ET guard are baked into the code.
 
 ## 3. Test it
 
-**Actions** tab → **Daily Newsletter** → **Run workflow**. A manual run **sends
-immediately** (it bypasses the time guard), so this is your full end-to-end test —
-check your inbox. Scheduled runs, by contrast, only send at **10:30am ET**.
+**Actions** tab → **Daily Newsletter** → **Run workflow**. A manual run sends
+immediately, so this is your full end-to-end test. The scheduled run fires daily at
+**~10:30am ET** — note GitHub's free cron can run 30–90 min late, but the job no
+longer skips on a delay, so it will still go out (a broadcast dedup prevents dupes).
 
 ## 4. It's live
 

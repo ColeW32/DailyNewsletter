@@ -2,12 +2,12 @@ name: Daily Newsletter
 
 on:
   schedule:
-    # Cron is UTC and has no daylight-saving awareness, so we fire at BOTH
-    # 14:30 and 15:30 UTC. The app's SEND_ONLY_AT_ET_HOUR=10 guard then lets
-    # exactly one of them through — whichever is 10:30am America/New_York.
+    # 14:30 UTC = 10:30am ET (EDT). GitHub's free cron often runs 30–90 min late,
+    # but the job no longer skips on a delayed run — it just sends a bit later.
+    # NOTE: in winter (EST) this is 9:30am ET; switch to '30 15 * * *' in early
+    # November to stay ~10:30am ET. The broadcast dedup prevents any double-send.
     - cron: '30 14 * * *'
-    - cron: '30 15 * * *'
-  workflow_dispatch: {} # lets you run it manually from the Actions tab
+  workflow_dispatch: {} # run it manually anytime from the Actions tab
 
 concurrency:
   group: daily-newsletter
@@ -34,6 +34,3 @@ jobs:
           # Unset → stays in test mode (emails NEWSLETTER_TO).
           SEND_MODE: ${{ vars.SEND_MODE }}
           RESEND_AUDIENCE_ID: ${{ vars.RESEND_AUDIENCE_ID }}
-          # Scheduled runs only fire at 10:30am ET (guard on). A manual
-          # "Run workflow" leaves it empty, so it sends immediately — handy for testing.
-          SEND_ONLY_AT_ET_HOUR: ${{ github.event_name == 'schedule' && '10' || '' }}
