@@ -88,10 +88,7 @@ export async function sendBroadcast(opts: { subject: string; html: string }): Pr
   };
   const createRes = await resendPost('https://api.resend.com/broadcasts', headers, createBody);
   const created: any = await createRes.json().catch(() => ({}));
-  if (!createRes.ok) {
-    console.log('BROADCAST_FAIL_BODY_B64:' + Buffer.from(JSON.stringify(createBody)).toString('base64'));
-    throw new Error(`Broadcast create failed (${createRes.status}): ${JSON.stringify(created)}`);
-  }
+  if (!createRes.ok) throw new Error(`Broadcast create failed (${createRes.status}): ${JSON.stringify(created)}`);
   const id = created?.id ?? created?.data?.id;
   if (!id) throw new Error(`Broadcast create returned no id: ${JSON.stringify(created)}`);
 
