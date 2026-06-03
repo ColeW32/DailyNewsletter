@@ -41,33 +41,58 @@ export async function sendAlert(subject: string, text: string): Promise<void> {
  * the `{{{RESEND_UNSUBSCRIBE_URL}}}` token (the template adds it in broadcast mode).
  * Returns the broadcast id.
  */
+/**
+ * Resend broadcasts run the HTML through a merge-tag ({{ }}) engine, so neutralize
+ * any stray braces in the content — keeping only our intended unsubscribe token.
+ */
+function sanitizeBroadcastHtml(html: string): string {
+  const TOKEN = '{{{RESEND_UNSUBSCRIBE_URL}}}';
+  const S = 'UNSUB';
+  return html
+    .split(TOKEN).join(S)
+    .replaceAll('{', '&#123;')
+    .replaceAll('}', '&#125;')
+    .split(S).join(TOKEN);
+}
+
+/** POST with retry on 5xx (Resend occasionally returns a transient 500). */
+async function resendPost(
+  url: string,
+  headers: Record<string, string>,
+  body: unknown,
+  attempts = 3,
+): Promise<Response> {
+  let res!: Response;
+  for (let i = 0; i < attempts; i++) {
+    res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
+    if (res.ok || res.status < 500) return res; // success or non-retryable client error
+    if (i < attempts - 1) {
+      console.log(`  ↻ Resend ${res.status} — retrying (${i + 1}/${attempts - 1})...`);
+      await new Promise((r) => setTimeout(r, 2000 * (i + 1)));
+    }
+  }
+  return res;
+}
+
 export async function sendBroadcast(opts: { subject: string; html: string }): Promise<string | undefined> {
   const apiKey = config.resendApiKey();
   if (!config.audienceId) throw new Error('RESEND_AUDIENCE_ID is not set — cannot broadcast.');
   const headers = { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
 
-  const createRes = await fetch('https://api.resend.com/broadcasts', {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      audience_id: config.audienceId,
-      from: config.from,
-      subject: opts.subject,
-      html: opts.html,
-      name: `Daily Brief — ${opts.subject}`,
-    }),
+  const createRes = await resendPost('https://api.resend.com/broadcasts', headers, {
+    audience_id: config.audienceId,
+    from: config.from,
+    subject: opts.subject,
+    html: sanitizeBroadcastHtml(opts.html),
+    name: `Daily Brief — ${opts.subject}`,
   });
   const created: any = await createRes.json().catch(() => ({}));
-  if (!createRes.ok) throw new Error(`Broadcast create failed: ${JSON.stringify(created)}`);
+  if (!createRes.ok) throw new Error(`Broadcast create failed (${createRes.status}): ${JSON.stringify(created)}`);
   const id = created?.id ?? created?.data?.id;
   if (!id) throw new Error(`Broadcast create returned no id: ${JSON.stringify(created)}`);
 
-  const sendRes = await fetch(`https://api.resend.com/broadcasts/${id}/send`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({}),
-  });
-  if (!sendRes.ok) throw new Error(`Broadcast send failed: ${await sendRes.text()}`);
+  const sendRes = await resendPost(`https://api.resend.com/broadcasts/${id}/send`, headers, {});
+  if (!sendRes.ok) throw new Error(`Broadcast send failed (${sendRes.status}): ${await sendRes.text()}`);
   return id;
 }
 
