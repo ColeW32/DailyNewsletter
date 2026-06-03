@@ -1,14 +1,20 @@
 /**
- * POST /api/subscribe   { email }
+ * POST /api/subscribe   { email, company?, t? }
  *
- * Public, multi-site signup endpoint. Validates the email, then sends a
- * double-opt-in confirmation email with a signed (stateless) link. The contact
- * is only added to the Resend Audience after they click that link (see confirm.ts).
+ * Public, multi-site signup endpoint with layered anti-spam. Valid signups get a
+ * double-opt-in confirmation email; the contact only joins the Audience after they
+ * click the link (see confirm.ts).
  *
- * Deploy on Vercel. CORS is open (or restricted via ALLOWED_ORIGINS) so the form
- * can be embedded on any of your sites.
+ * Anti-spam layers (no CAPTCHA required):
+ *   1. Honeypot ("company") — hidden field; if filled → silent drop.
+ *   2. Origin allowlist — if ALLOWED_ORIGINS set, reject other origins.
+ *   3. Submit timing ("t" = ms on screen) — sub-1.5s submits → silent drop.
+ *   4. Disposable-domain blocklist.
+ *   5. MX check — domain must be able to receive mail.
+ *   6. Double opt-in — nothing joins the list until the emailed link is clicked.
  */
 import crypto from 'node:crypto';
+import { resolveMx, resolve } from 'node:dns/promises';
 
 const SECRET = process.env.SUBSCRIBE_SECRET || '';
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
@@ -16,13 +22,53 @@ const FROM = process.env.NEWSLETTER_FROM || 'Survey Club Daily <daily@daily.gets
 const CONFIRM_BASE = process.env.CONFIRM_BASE_URL || '';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function applyCors(res: any, origin?: string) {
+// Common disposable / throwaway domains. Blocks the bulk of junk signups.
+const DISPOSABLE = new Set([
+  '0-mail.com', '10minutemail.com', '20minutemail.com', '33mail.com', 'anonbox.net',
+  'binkmail.com', 'bobmail.info', 'bugmenot.com', 'burnermail.io', 'crazymailing.com',
+  'discard.email', 'discardmail.com', 'dispostable.com', 'dropmail.me', 'emailondeck.com',
+  'fakeinbox.com', 'fakemail.net', 'fakemailgenerator.com', 'getairmail.com', 'getnada.com',
+  'grr.la', 'guerrillamail.biz', 'guerrillamail.com', 'guerrillamail.de', 'guerrillamail.info',
+  'guerrillamail.net', 'guerrillamail.org', 'guerrillamailblock.com', 'harakirimail.com', 'inboxbear.com',
+  'inboxkitten.com', 'jetable.org', 'mailcatch.com', 'maildrop.cc', 'mailde.de',
+  'maileater.com', 'mailexpire.com', 'mailforspam.com', 'mailinator.com', 'mailinator.net',
+  'mailnesia.com', 'mailnull.com', 'mailsac.com', 'mailtemp.net', 'mailtothis.com',
+  'meltmail.com', 'mintemail.com', 'moakt.com', 'mohmal.com', 'mvrht.com',
+  'mytemp.email', 'nada.email', 'nowmymail.com', 'objectmail.com', 'oneoffmail.com',
+  'pokemail.net', 'sharklasers.com', 'spam4.me', 'spambog.com', 'spambox.us',
+  'spamdecoy.net', 'spamgourmet.com', 'tafmail.com', 'tempail.com', 'tempemail.com',
+  'tempinbox.com', 'tempmail.com', 'tempmail.net', 'tempmailo.com', 'temp-mail.org',
+  'tempr.email', 'throwaway.email', 'throwawaymail.com', 'tmpmail.net', 'tmpmail.org',
+  'trashmail.com', 'trashmail.de', 'trashmail.net', 'trbvm.com', 'vomoto.com',
+  'wegwerfmail.de', 'yopmail.com', 'yopmail.fr', 'yopmail.net', 'zetmail.com',
+]);
+
+function originList(): string[] | null {
   const list = process.env.ALLOWED_ORIGINS?.split(',').map((s) => s.trim()).filter(Boolean);
-  const allow = !list || list.length === 0 ? '*' : origin && list.includes(origin) ? origin : list[0];
+  return list && list.length ? list : null;
+}
+
+function applyCors(res: any, origin?: string) {
+  const list = originList();
+  const allow = !list ? '*' : origin && list.includes(origin) ? origin : list[0];
   res.setHeader('Access-Control-Allow-Origin', allow);
   res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+}
+
+async function domainCanReceiveMail(domain: string): Promise<boolean> {
+  try {
+    const mx = (await Promise.race([
+      resolveMx(domain),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('dns timeout')), 3000)),
+    ])) as { exchange: string }[];
+    if (mx && mx.length > 0) return true;
+    const a = await resolve(domain).catch(() => [] as string[]);
+    return Array.isArray(a) && a.length > 0;
+  } catch {
+    return true; // DNS hiccup → fail open (never reject a real user on a transient error)
+  }
 }
 
 function signToken(email: string): string {
@@ -40,12 +86,36 @@ export default async function handler(req: any, res: any) {
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
     const email = String(body.email || '').trim().toLowerCase();
-    const honeypot = String(body.company || ''); // bots fill hidden fields
+    const honeypot = String(body.company || '');
+    const elapsed = Number(body.t);
 
-    if (honeypot) return res.status(200).json({ ok: true }); // silently drop bots
-    if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Please enter a valid email address.' });
+    // 1. Honeypot — real users never fill the hidden field.
+    if (honeypot) return res.status(200).json({ ok: true });
+    // 2. Origin allowlist (if configured) — block direct API abuse from other sites.
+    const list = originList();
+    if (list && !(req.headers?.origin && list.includes(req.headers.origin))) {
+      return res.status(403).json({ error: 'Forbidden.' });
+    }
+    // 3. Too-fast submit — bots fill + submit in milliseconds.
+    if (Number.isFinite(elapsed) && elapsed > 0 && elapsed < 1500) {
+      return res.status(200).json({ ok: true });
+    }
+
+    if (email.length > 254 || !EMAIL_RE.test(email)) {
+      return res.status(400).json({ error: 'Please enter a valid email address.' });
+    }
     if (!SECRET || !RESEND_API_KEY || !CONFIRM_BASE) {
       return res.status(500).json({ error: 'Subscribe endpoint is not configured.' });
+    }
+
+    const domain = email.split('@')[1];
+    // 4. Disposable / throwaway domains.
+    if (DISPOSABLE.has(domain)) {
+      return res.status(400).json({ error: 'Please use a permanent (non-disposable) email address.' });
+    }
+    // 5. Domain must actually be able to receive mail (catches typos + fake domains).
+    if (!(await domainCanReceiveMail(domain))) {
+      return res.status(400).json({ error: 'That email domain can’t receive mail — double-check the spelling.' });
     }
 
     const token = signToken(email);
@@ -61,7 +131,6 @@ export default async function handler(req: any, res: any) {
         html: confirmEmailHtml(confirmUrl),
       }),
     });
-
     if (!r.ok) {
       return res.status(502).json({ error: 'Could not send the confirmation email. Try again shortly.' });
     }

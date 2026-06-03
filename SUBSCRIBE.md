@@ -40,8 +40,8 @@ always-on endpoint).
 4. *(Optional)* point a subdomain like `subscribe.getsurvey.club` at the Vercel project.
 
 ## A) Embed form (paste into any site)
-Replace `SUBSCRIBE_URL` with your deployed origin. Restyle however you like — only
-the `fetch` URL and the hidden honeypot field matter.
+Pre-filled with your live endpoint. Restyle however you like — just keep the hidden
+honeypot field and the `t` (timing) value, which power the anti-spam checks.
 
 ```html
 <form id="sc-subscribe" style="display:flex;gap:8px;max-width:420px;">
@@ -57,7 +57,8 @@ the `fetch` URL and the hidden honeypot field matter.
 <p id="sc-msg" style="font-size:14px;margin-top:8px;"></p>
 <script>
 (function () {
-  var SUBSCRIBE_URL = "https://subscribe.getsurvey.club/api/subscribe"; // <-- your deployed URL
+  var SUBSCRIBE_URL = "https://daily-newsletter-one.vercel.app/api/subscribe";
+  var loadedAt = Date.now();
   var f = document.getElementById("sc-subscribe"), m = document.getElementById("sc-msg");
   f.addEventListener("submit", async function (e) {
     e.preventDefault();
@@ -66,7 +67,7 @@ the `fetch` URL and the hidden honeypot field matter.
       var res = await fetch(SUBSCRIBE_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: f.email.value, company: f.company.value }),
+        body: JSON.stringify({ email: f.email.value, company: f.company.value, t: Date.now() - loadedAt }),
       });
       var data = await res.json();
       m.textContent = res.ok ? "✅ Check your inbox to confirm!" : (data.error || "Something went wrong.");
@@ -79,11 +80,12 @@ the `fetch` URL and the hidden honeypot field matter.
 
 ## B) Raw API (build your own UI)
 ```
-POST https://subscribe.getsurvey.club/api/subscribe
+POST https://daily-newsletter-one.vercel.app/api/subscribe
 Content-Type: application/json
 
-{ "email": "you@email.com" }
+{ "email": "you@email.com", "t": 4200 }
 ```
+*(`t` = milliseconds the form was on screen before submit — optional but recommended; it powers the timing anti-spam check. Also send an empty hidden `company` field as a honeypot if you can.)*
 Responses:
 ```
 200  { "ok": true, "message": "Almost there — check your inbox to confirm." }
@@ -93,11 +95,18 @@ Then the user clicks the confirm link in their inbox and they're added to the li
 (That's it — no API key needed by the embedding site; the key lives only on the
 server.)
 
-## Recommended hardening
-Because the form is public, add an invisible CAPTCHA (e.g. **Cloudflare Turnstile**)
-to block email-bombing — the form gets a token, `subscribe.ts` verifies it. Easy to
-add when you want it. (Double opt-in already keeps the *list* clean; this just
-protects your send quota.)
+## Anti-spam (built in)
+The endpoint runs several layers before it ever sends a confirmation email:
+- **Honeypot** — a hidden `company` field; if filled, the signup is silently dropped.
+- **Submit-timing** — the embed sends `t` (ms on screen); sub-1.5s submits (bots) are silently dropped.
+- **Disposable-domain block** — known throwaway domains (mailinator, guerrillamail, …) are rejected.
+- **MX check** — the email's domain must actually be able to receive mail (kills typos + fake domains).
+- **Origin allowlist** — set `ALLOWED_ORIGINS` (CSV of your sites' origins) and the endpoint rejects POSTs from anywhere else. **Strongly recommended** once you know your embed domains.
+- **Double opt-in** — nothing joins the Audience until the emailed link is clicked.
+
+Together these stop the large majority of junk. The one remaining gap is *volumetric*
+abuse (scripting thousands of requests to burn your send quota) — for that add
+**Cloudflare Turnstile** (planned) or an IP rate-limiter (e.g. Upstash KV).
 
 ## Last step: send to the Audience
 Once subscribers are flowing in, we switch the daily 10:30am job from "send to you"
