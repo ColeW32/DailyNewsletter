@@ -16,10 +16,10 @@
 import crypto from 'node:crypto';
 import { resolveMx, resolve } from 'node:dns/promises';
 
-const SECRET = process.env.SUBSCRIBE_SECRET || '';
-const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
-const FROM = process.env.NEWSLETTER_FROM || 'Survey Club Daily <daily@daily.getsurvey.club>';
-const CONFIRM_BASE = process.env.CONFIRM_BASE_URL || '';
+const SECRET = (process.env.SUBSCRIBE_SECRET || '').trim();
+const RESEND_API_KEY = (process.env.RESEND_API_KEY || '').trim();
+const FROM = (process.env.NEWSLETTER_FROM || 'Survey Club Daily <daily@daily.getsurvey.club>').trim();
+const CONFIRM_BASE = (process.env.CONFIRM_BASE_URL || '').trim();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Common disposable / throwaway domains. Blocks the bulk of junk signups.
