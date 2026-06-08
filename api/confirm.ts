@@ -9,7 +9,6 @@ import crypto from 'node:crypto';
 const SECRET = (process.env.SUBSCRIBE_SECRET || '').trim();
 const RESEND_API_KEY = (process.env.RESEND_API_KEY || '').trim();
 const AUDIENCE_ID = (process.env.RESEND_AUDIENCE_ID || '').trim();
-const SPARKLOOP_PUB = 'pub_146b410876ab';
 
 function verifyToken(token: string): string | null {
   try {
@@ -53,29 +52,17 @@ export default async function handler(req: any, res: any) {
   if (!r.ok && r.status !== 409 && r.status !== 422) {
     return res.status(502).send(page('Hmm, that didn’t work', 'We couldn’t confirm you just now — please try again shortly.'));
   }
-  return res.status(200).send(
-    page("You're in! 🎉", "You'll get the Survey Club Daily Brief every morning. Welcome aboard.", email),
-  );
+  return res.status(200).send(page("You're in! 🎉", "You'll get the Survey Club Daily Brief every morning. Welcome aboard."));
 }
 
-function page(title: string, body: string, email?: string): string {
-  // On success, fire SparkLoop Upscribe for the confirmed email (recommended
-  // newsletters, one-click subscribe — we earn per subscribe).
-  const sparkloop = email
-    ? `
-  <script async src="https://js.sparkloop.app/embed.js?publication_id=${SPARKLOOP_PUB}" data-sparkloop></script>
-  <script>(function(){var e=${JSON.stringify(email)},n=0;(function f(){if(window.SL&&typeof window.SL.trackSubscriber==='function'){window.SL.trackSubscriber(e);}else if(n++<40){setTimeout(f,250);}})();})();</script>`
-    : '';
-  const more = email
-    ? `<p style="margin:18px 0 0;font-size:14px;color:#8a9099;">📬 A few newsletters we think you'll love are below — tap any to subscribe in a click.</p>`
-    : '';
+function page(title: string, body: string): string {
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title></head>
   <body style="margin:0;background:#f4f5f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
   <div style="max-width:520px;margin:8% auto;background:#fff;border-radius:16px;overflow:hidden;">
     <div style="background:#000;padding:22px 28px;"><div style="font-size:20px;font-weight:900;color:#fff;">Survey Club</div></div>
     <div style="padding:32px 28px;">
       <h1 style="margin:0 0 10px;font-size:24px;color:#1a1a1a;">${title}</h1>
-      <p style="margin:0;font-size:16px;line-height:1.6;color:#3a3a42;">${body}</p>${more}
+      <p style="margin:0;font-size:16px;line-height:1.6;color:#3a3a42;">${body}</p>
     </div>
-  </div>${sparkloop}</body></html>`;
+  </div></body></html>`;
 }

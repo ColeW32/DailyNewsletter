@@ -108,23 +108,6 @@ Together these stop the large majority of junk. The one remaining gap is *volume
 abuse (scripting thousands of requests to burn your send quota) — for that add
 **Cloudflare Turnstile** (planned) or an IP rate-limiter (e.g. Upstash KV).
 
-## Newsletter recommendations (SparkLoop Upscribe 💸)
-After someone confirms, the **confirmation page** (`api/confirm.ts`) loads SparkLoop's
-Upscribe widget and fires it for the confirmed email
-(`window.SL.trackSubscriber(email)`) using publication `pub_146b410876ab`. They get a
-one-click list of recommended newsletters; you earn per subscribe.
-
-**Optional — also show it the instant they hit Subscribe** (on your site's form page).
-Add the script once to the page:
-```html
-<script async src="https://js.sparkloop.app/embed.js?publication_id=pub_146b410876ab" data-sparkloop></script>
-```
-…and in the embed snippet's success branch (right after `f.reset()`), add:
-```js
-if (window.SL && window.SL.trackSubscriber) window.SL.trackSubscriber(f.email.value);
-```
-SparkLoop dedupes by email, so showing it on both the form and the confirm page is fine.
-
 ## Last step: send to the Audience
 Once subscribers are flowing in, we switch the daily 10:30am job from "send to you"
 to a **Resend Broadcast** to this Audience (with the auto unsubscribe link + your
