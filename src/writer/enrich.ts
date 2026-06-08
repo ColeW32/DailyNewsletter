@@ -20,7 +20,8 @@ export async function enrichWithResearch(data: SourceData): Promise<SourceData> 
     const client = new Anthropic({ apiKey: config.anthropicApiKey(), maxRetries: 4 });
     const prompt = [
       `Today is ${data.date ?? 'today'}. Below are one-line teasers from a daily business-news podcast. They lack specifics.`,
-      `For the TOP 2 stories, use web search to find the concrete facts a reader would want: exact names (people, companies, products, titles), key numbers ($ amounts, %, rankings), and what actually happened.`,
+      `Choose the TWO most genuinely newsworthy, DISTINCT stories (two different topics — never the same story twice). IGNORE any teaser that's really about the podcast itself — a guest coming on the show, a live tour/tickets, "our other show", or schedule/frequency notes; those aren't stories.`,
+      `For each of the two, use web search to find the concrete facts a reader would want: exact names (people, companies, products, titles), key numbers ($ amounts, %, rankings), and what ACTUALLY happened — the real-world event, not the "joined the show" framing.`,
       `Return a tight factual brief — a few bullet points per story with the specifics filled in. Facts only, no fluff. If a story can't be verified, say so in one line.`,
       ``,
       `Teasers:`,

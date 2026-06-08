@@ -1,5 +1,6 @@
 import Parser from 'rss-parser';
 import { htmlToLines } from '../utils/html';
+import { todayInET } from '../utils/date';
 import type { SourceData, ContentItem } from './types';
 
 // "The Best One Yet" — Acast podcast RSS. The day's stories live in the
@@ -16,6 +17,16 @@ export async function fetchTboy(): Promise<SourceData | null> {
   const feed = await parser.parseURL(FEED);
   const item = feed.items[0];
   if (!item) return null;
+
+  // TBOY only publishes Mon–Fri. On weekends/holidays the feed still serves the
+  // last (e.g. Friday's) episode — we don't want to repurpose those stale stories.
+  // Only run this section when the latest episode is actually from today (ET).
+  const episodeDateET = item.pubDate
+    ? new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(
+        new Date(item.pubDate),
+      )
+    : '';
+  if (episodeDateET !== todayInET()) return null;
 
   const html =
     (item as any).descriptionHtml ??
@@ -40,9 +51,7 @@ export async function fetchTboy(): Promise<SourceData | null> {
 
   if (stories.length === 0) return null;
 
-  const date = item.pubDate
-    ? new Date(item.pubDate).toISOString().slice(0, 10)
-    : undefined;
+  const date = episodeDateET;
 
   const items: ContentItem[] = stories.map((s) => ({ title: s, summary: '' }));
   if (plus) items.push({ title: plus, summary: '' });
@@ -57,7 +66,7 @@ export async function fetchTboy(): Promise<SourceData | null> {
     notes: [
       item.title ? `Episode teaser headline: ${item.title}` : '',
       tickers ? `Tickers mentioned: ${tickers}` : '',
-      'These are one-line teasers. Feature the TOP 2 stories. For EACH, write a fun, informative ~3–4 sentence blurb that names the ACTUAL people, companies, products/titles and key numbers — not vague teasers. Use the RESEARCHED FACTS below for those specifics when present. Explain what happened and why it matters.',
+      'Pick the TOP 2 — two DISTINCT, genuinely newsworthy stories (never the same story written up twice). SKIP any item that is really about the podcast/show itself: a guest coming on the show, a live tour, ticket promos, "our other show", or schedule/frequency notes — those are not stories. For each pick, write the ACTUAL news (the real company/event/development and why it matters), NOT the "they joined the show" framing. Use the RESEARCHED FACTS below for real names, numbers and specifics; write a fun, informative ~3–4 sentence blurb.',
     ]
       .filter(Boolean)
       .join('\n'),
