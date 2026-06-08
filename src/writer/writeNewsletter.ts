@@ -131,36 +131,50 @@ export async function writeNewsletter(
     '```',
   ].join('\n');
 
-  const res = await client.messages.create(
-    {
-      model,
-      max_tokens: 8000,
-      temperature: 0.8,
-      system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
-      tools: [TOOL as any],
-      tool_choice: { type: 'tool', name: 'newsletter' },
-      messages: [{ role: 'user', content: userMsg }],
-    },
-    { timeout: 90_000 },
-  );
-
-  const toolUse = res.content.find((c) => c.type === 'tool_use');
-  if (!toolUse || toolUse.type !== 'tool_use') {
-    throw new Error('Writer did not return structured output.');
-  }
-  const result = toolUse.input as any;
-  // The model occasionally serializes the nested array as a JSON string — normalize.
-  if (typeof result.sections === 'string') {
-    const raw = result.sections as string;
+  // The forced tool-call occasionally returns `sections` as an empty array or a
+  // stringified blob (this is what produced the empty email). Retry until we get
+  // real sections; re-throw the API error only if every attempt errored.
+  let result: any = null;
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      result.sections = JSON.parse(raw);
-    } catch {
-      console.log(
-        `  ⚠️  writer returned a malformed sections string (len=${raw.length}); tail: ${raw.slice(-140)}`,
+      const res = await client.messages.create(
+        {
+          model,
+          max_tokens: 8000,
+          temperature: 0.8,
+          system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
+          tools: [TOOL as any],
+          tool_choice: { type: 'tool', name: 'newsletter' },
+          messages: [{ role: 'user', content: userMsg }],
+        },
+        { timeout: 90_000 },
       );
-      result.sections = [];
+      const toolUse = res.content.find((c) => c.type === 'tool_use');
+      if (!toolUse || toolUse.type !== 'tool_use') {
+        console.log(`  ⚠️  writer attempt ${attempt}: no structured output — retrying...`);
+        continue;
+      }
+      const r = toolUse.input as any;
+      // The model sometimes serializes the nested array as a JSON string — normalize.
+      if (typeof r.sections === 'string') {
+        try {
+          r.sections = JSON.parse(r.sections);
+        } catch {
+          r.sections = [];
+        }
+      }
+      if (!Array.isArray(r.sections)) r.sections = [];
+      result = r;
+      if (r.sections.length > 0) return r as Newsletter;
+      console.log(
+        `  ⚠️  writer attempt ${attempt}: 0 sections (had ${sources.length} sources) — retrying...`,
+      );
+    } catch (e) {
+      lastError = e;
+      console.log(`  ⚠️  writer attempt ${attempt} errored: ${(e as Error).message} — retrying...`);
     }
   }
-  if (!Array.isArray(result.sections)) result.sections = [];
-  return result as Newsletter;
+  if (result) return result as Newsletter; // empty sections — the caller refuses to send
+  throw lastError instanceof Error ? lastError : new Error('Writer failed to produce output.');
 }

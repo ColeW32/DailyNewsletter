@@ -56,6 +56,19 @@ async function main() {
   console.log('\n✍️  Writing the newsletter with Claude...');
   const label = longDateET();
   const nl = await writeNewsletter(enriched, label);
+
+  // Safety net: never send an empty newsletter (writer returned no sections).
+  if (!Array.isArray(nl.sections) || nl.sections.length === 0) {
+    console.error('💥 Writer returned 0 sections — refusing to send an empty newsletter.');
+    if (!dryRun) {
+      await sendAlert(
+        'Empty newsletter blocked',
+        `The writer produced 0 sections for ${label} despite ${enriched.length} source(s) collected. Nothing was sent.`,
+      );
+      process.exit(1);
+    }
+  }
+
   const broadcast = config.sendMode === 'broadcast';
   const html = renderNewsletter(nl, enriched, label, {
     mailingAddress: config.mailingAddress,
@@ -74,8 +87,8 @@ async function main() {
   }
 
   if (broadcast) {
-    if (await broadcastSentToday()) {
-      console.log('⏭️  A broadcast already went out today — skipping to avoid a duplicate.');
+    if (!args.has('--force') && (await broadcastSentToday())) {
+      console.log('⏭️  A broadcast already went out today — skipping (use --force to override).');
       return;
     }
     console.log('\n📣 Sending Broadcast to the Audience...');
