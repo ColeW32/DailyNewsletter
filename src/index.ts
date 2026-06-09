@@ -73,6 +73,7 @@ async function main() {
   const html = renderNewsletter(nl, enriched, label, {
     mailingAddress: config.mailingAddress,
     unsubscribeHref: broadcast ? '{{{RESEND_UNSUBSCRIBE_URL}}}' : '#',
+    recipientEmail: broadcast ? '{{{EMAIL}}}' : config.to,
   });
 
   if (dryRun) {

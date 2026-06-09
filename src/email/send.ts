@@ -37,22 +37,20 @@ export async function sendAlert(subject: string, text: string): Promise<void> {
 }
 
 /**
- * Create + send a Resend Broadcast to the whole Audience. The HTML must contain
- * the `{{{RESEND_UNSUBSCRIBE_URL}}}` token (the template adds it in broadcast mode).
- * Returns the broadcast id.
- */
-/**
- * Resend broadcasts run the HTML through a merge-tag ({{ }}) engine, so neutralize
- * any stray braces in the content — keeping only our intended unsubscribe token.
+ * Resend broadcasts run the HTML through a merge-tag ({{ }}) engine. Preserve our
+ * merge tags (unsubscribe URL + per-contact EMAIL) and neutralize any other stray
+ * braces in the content so the template engine can't choke on them.
  */
 function sanitizeBroadcastHtml(html: string): string {
-  const TOKEN = '{{{RESEND_UNSUBSCRIBE_URL}}}';
-  const S = 'UNSUB';
-  return html
-    .split(TOKEN).join(S)
-    .replaceAll('{', '&#123;')
-    .replaceAll('}', '&#125;')
-    .split(S).join(TOKEN);
+  const TOKENS: Array<[string, string]> = [
+    ['{{{RESEND_UNSUBSCRIBE_URL}}}', '__SC_UNSUB__'],
+    ['{{{EMAIL}}}', '__SC_EMAIL__'],
+  ];
+  let s = html;
+  for (const [tok, ph] of TOKENS) s = s.split(tok).join(ph);
+  s = s.replaceAll('{', '&#123;').replaceAll('}', '&#125;');
+  for (const [tok, ph] of TOKENS) s = s.split(ph).join(tok);
+  return s;
 }
 
 /** POST with retry on 5xx (Resend occasionally returns a transient 500). */
@@ -74,6 +72,11 @@ async function resendPost(
   return res;
 }
 
+/**
+ * Create + send a Resend Broadcast to the whole Audience. The HTML must contain
+ * the `{{{RESEND_UNSUBSCRIBE_URL}}}` token (the template adds it in broadcast mode).
+ * Returns the broadcast id.
+ */
 export async function sendBroadcast(opts: { subject: string; html: string }): Promise<string | undefined> {
   const apiKey = config.resendApiKey();
   if (!config.audienceId) throw new Error('RESEND_AUDIENCE_ID is not set — cannot broadcast.');

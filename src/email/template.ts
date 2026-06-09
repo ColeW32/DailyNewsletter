@@ -24,6 +24,11 @@ const ATTRIBUTED_SECTIONS = new Set(['chart-of-the-day']);
 const CTA_URL = 'https://getsurvey.club';
 const CTA_TEXT = 'Earn more cash today →';
 
+// Recommended-newsletter referral. `email=` is filled per recipient: the real
+// address in self mode, or Resend's {{{EMAIL}}} merge tag in broadcast mode.
+const CAPITAL_REC_URL =
+  'https://recs.page/survey-club?ref_code=7fd0d6c68c&lc=link_campaign_c696870dcf23&email=';
+
 /** Minimal HTML escaping for interpolated text + attribute values. */
 function esc(s: string): string {
   return String(s)
@@ -117,11 +122,26 @@ function renderCta(): string {
   </td></tr>`;
 }
 
+function renderCapitalRec(emailValue: string): string {
+  const url = CAPITAL_REC_URL + emailValue;
+  return `
+  <tr><td style="padding:6px 32px 8px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${C.divider};border-radius:12px;border-collapse:separate;">
+      <tr><td style="padding:18px 20px;">
+        <div style="font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:${C.muted};">Recommended newsletter</div>
+        <h3 style="margin:5px 0 6px;font-size:18px;line-height:1.25;color:${C.ink};font-weight:800;">CAPITAL</h3>
+        <p style="margin:0 0 12px;font-size:15px;line-height:1.55;color:${C.body};">The daily newsletter that delivers the most important news on tech, markets and freedom. Readers who add Capital to their Club Daily tend to build higher income over time — and report a happier life.</p>
+        <a href="${esc(url)}" style="display:inline-block;font-size:14px;line-height:1;font-weight:800;color:#000000;background:${C.green};border-radius:999px;padding:11px 22px;text-decoration:none;">Subscribe to Capital →</a>
+      </td></tr>
+    </table>
+  </td></tr>`;
+}
+
 export function renderNewsletter(
   nl: Newsletter,
   sources: SourceData[],
   dateLabel: string,
-  opts: { unsubscribeHref?: string; mailingAddress?: string } = {},
+  opts: { unsubscribeHref?: string; mailingAddress?: string; recipientEmail?: string } = {},
 ): string {
   const byId = new Map(sources.map((s) => [s.id, s]));
   const order = sources.map((s) => s.id);
@@ -165,6 +185,8 @@ ${sectionsHtml}
 </td></tr>
 
 ${renderCta()}
+
+${renderCapitalRec(opts.recipientEmail ?? '')}
 
 <tr><td style="padding:24px 32px 32px;">
   <p style="margin:0;font-size:12px;line-height:1.5;color:${C.muted};">You're reading the Survey Club Daily Brief — curated from public sources and written up by AI. Double-check anything before you bet the farm on it.</p>
