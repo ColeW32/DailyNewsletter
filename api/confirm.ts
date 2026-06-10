@@ -52,6 +52,27 @@ export default async function handler(req: any, res: any) {
   if (!r.ok && r.status !== 409 && r.status !== 422) {
     return res.status(502).send(page('Hmm, that didn’t work', 'We couldn’t confirm you just now — please try again shortly.'));
   }
+
+  // Report the completed double opt-in to the Survey Club backend for the admin
+  // dashboard's daily-confirms stats. Best-effort: a stats hiccup must never
+  // break the user's confirmation (await so Vercel doesn't kill the request,
+  // but swallow every failure).
+  // Note: 409/422 (already confirmed) also lands here — re-confirms are rare
+  // enough that we accept the slight overcount rather than complicate this.
+  try {
+    await fetch(
+      'https://api.getsurvey.club/newsletters/events/confirmed?token=dbc8e6e0b3600d978076a7712dedd1cdf57f6398',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+        signal: AbortSignal.timeout(3000),
+      },
+    );
+  } catch {
+    // non-fatal
+  }
+
   return res.status(200).send(page("You're in! 🎉", "You'll get the Survey Club Daily Brief every morning. Welcome aboard."));
 }
 

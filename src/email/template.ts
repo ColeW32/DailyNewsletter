@@ -21,7 +21,11 @@ const LINKLESS_SECTIONS = new Set(['macro-news', 'ai-brief']);
 // Only these sections show a source/attribution label (others have no subtext).
 const ATTRIBUTED_SECTIONS = new Set(['chart-of-the-day']);
 
-const CTA_URL = 'https://getsurvey.club';
+// utm_campaign=open_app is load-bearing: the Survey Club backend counts Resend
+// click events whose link carries it as "app button clicks" on the admin
+// newsletter dashboard (and it gives GA clean attribution).
+const CTA_URL =
+  'https://getsurvey.club?utm_source=club_daily&utm_medium=email&utm_campaign=open_app';
 const CTA_TEXT = 'Earn more cash today →';
 
 // Recommended-newsletter referral. `email=` is filled per recipient: the real
@@ -118,7 +122,7 @@ function renderCta(): string {
         )}</a>
       </td></tr>
     </table>
-    <p style="margin:12px 0 0;text-align:center;font-size:13px;color:${C.muted};"><a href="${CTA_URL}" style="color:${C.muted};text-decoration:none;">getsurvey.club</a></p>
+    <p style="margin:12px 0 0;text-align:center;font-size:13px;color:${C.muted};"><a href="https://getsurvey.club" style="color:${C.muted};text-decoration:none;">getsurvey.club</a></p>
   </td></tr>`;
 }
 
