@@ -91,9 +91,14 @@ export default async function handler(req: any, res: any) {
 
     // 1. Honeypot — real users never fill the hidden field.
     if (honeypot) return res.status(200).json({ ok: true });
-    // 2. Origin allowlist (if configured) — block direct API abuse from other sites.
+    // 2. Origin allowlist (if configured) — block browser calls from other sites.
+    //    Only enforced when an Origin header is present: native apps and
+    //    server-to-server clients don't send one (and anything outside a browser
+    //    can forge headers, so origin gating only defends against cross-site
+    //    browser abuse anyway — layers 1 and 3-6 still cover origin-less traffic).
     const list = originList();
-    if (list && !(req.headers?.origin && list.includes(req.headers.origin))) {
+    const origin = req.headers?.origin;
+    if (list && origin && !list.includes(origin)) {
       return res.status(403).json({ error: 'Forbidden.' });
     }
     // 3. Too-fast submit — bots fill + submit in milliseconds.

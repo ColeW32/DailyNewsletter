@@ -165,10 +165,11 @@ if not r.ok:
 
 ## CORS / browser use
 
-The endpoint currently accepts requests from **any origin** (browser or server), so the
-examples above work as-is. If we later restrict to an allow-list, browser requests from
-non-approved domains return `403` — just send us the origin(s) you'll call from (e.g.
-`https://yourapp.com`) and we'll add them. Server-to-server calls are unaffected by CORS.
+**Browser** requests are checked against an origin allow-list when one is configured:
+requests from non-approved domains return `403` — send us the origin(s) you'll call from
+(e.g. `https://yourapp.com`) and we'll add them. Requests **without** an `Origin` header —
+native mobile apps, server-to-server, curl — are always accepted; origin checks only
+apply to browsers. (Anti-spam layers 1 and 3–6 cover origin-less traffic.)
 
 ## Notes & FAQ
 
