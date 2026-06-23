@@ -7,16 +7,11 @@
  * unsubscribed. Contacts only enter the audience after double opt-in
  * (see confirm.ts), so audience membership == confirmed.
  */
-import { getDailyStats } from '../src/stats/store';
-import { recentDatesET } from '../src/utils/date';
-
 const RESEND_API_KEY = (process.env.RESEND_API_KEY || '').trim();
 const AUDIENCE_ID = (process.env.RESEND_AUDIENCE_ID || '').trim();
 
 // Shared with SurveyClub-Backend (newsletters.service.ts DAILY_STATS_TOKEN).
 const STATS_TOKEN = 'ad0e35507ae7bb925c715ebdb1cd87d4d4749081';
-// Days of open/click history returned for the dashboard's daily series.
-const STATS_WINDOW_DAYS = 14;
 
 export default async function handler(req: any, res: any) {
   if (String(req.query?.token || '') !== STATS_TOKEN) {
@@ -43,30 +38,8 @@ export default async function handler(req: any, res: any) {
     ).length;
     const unsubscribed = contacts.length - confirmedSubscribers;
 
-    // Daily open/click counts come from our own Upstash store (written by the
-    // Resend webhook). Degrade to an empty series if Redis is unavailable — the
-    // subscriber count must still return.
-    let days: Array<{
-      date: string;
-      opens: number;
-      clicks: number;
-      ctaClicks: number;
-    }> = [];
-    try {
-      const dates = recentDatesET(STATS_WINDOW_DAYS);
-      const byDate = await getDailyStats(dates);
-      days = dates.map((date) => ({
-        date,
-        ...(byDate[date] ?? { opens: 0, clicks: 0, ctaClicks: 0 }),
-      }));
-    } catch {
-      days = [];
-    }
-
     res.setHeader('Cache-Control', 'private, max-age=300');
-    return res
-      .status(200)
-      .json({ confirmedSubscribers, unsubscribed, days });
+    return res.status(200).json({ confirmedSubscribers, unsubscribed });
   } catch (err) {
     return res
       .status(502)
