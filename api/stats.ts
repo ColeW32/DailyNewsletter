@@ -28,7 +28,7 @@ const KV_TOKEN = (
 
 // Shared with SurveyClub-Backend (newsletters.service.ts DAILY_STATS_TOKEN).
 const STATS_TOKEN = 'ad0e35507ae7bb925c715ebdb1cd87d4d4749081';
-const STATS_WINDOW_DAYS = 14;
+const STATS_WINDOW_DAYS = 30;
 
 type DayStat = { date: string; opens: number; clicks: number; ctaClicks: number };
 
