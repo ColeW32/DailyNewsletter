@@ -57,7 +57,9 @@ export async function fetchApolloSpark(): Promise<SourceData | null> {
     ...new Set(
       [
         ...html.matchAll(
-          /https:\/\/www\.apollo\.com\/content\/dam\/apolloaem\/images\/daily-spark\/[^"'\\]+\.jpg/g,
+          // Exclude whitespace from match so space-in-filename URLs (e.g. "June 29-chart 1.jpg")
+          // are skipped in favour of the percent-encoded sibling that also appears in the HTML.
+          /https:\/\/www\.apollo\.com\/content\/dam\/apolloaem\/images\/daily-spark\/[^"'\s\\]+\.jpg/g,
         ),
       ].map((x) => x[0]),
     ),
