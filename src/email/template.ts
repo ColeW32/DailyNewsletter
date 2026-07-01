@@ -112,17 +112,21 @@ function renderSection(sec: WrittenSection, source?: SourceData): string {
   <tr><td style="padding:22px 32px 0;"><hr style="border:none;border-top:1px solid ${C.divider};margin:0;"></td></tr>`;
 }
 
-function renderCta(): string {
+function renderCta(sendDateISO: string): string {
   return `
   <tr><td style="padding:30px 32px 10px;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
       <tr><td align="center" bgcolor="${C.green}" style="border-radius:999px;">
-        <a href="${CTA_URL}" style="display:inline-block;padding:17px 34px;font-size:17px;line-height:1;font-weight:800;color:#000000;text-decoration:none;">${esc(
+        <a href="${clickUrl(CTA_URL, sendDateISO, 'cta')}" style="display:inline-block;padding:17px 34px;font-size:17px;line-height:1;font-weight:800;color:#000000;text-decoration:none;">${esc(
           CTA_TEXT,
         )}</a>
       </td></tr>
     </table>
-    <p style="margin:12px 0 0;text-align:center;font-size:13px;color:${C.muted};"><a href="https://getsurvey.club" style="color:${C.muted};text-decoration:none;">getsurvey.club</a></p>
+    <p style="margin:12px 0 0;text-align:center;font-size:13px;color:${C.muted};"><a href="${clickUrl(
+      'https://getsurvey.club',
+      sendDateISO,
+      'link',
+    )}" style="color:${C.muted};text-decoration:none;">getsurvey.club</a></p>
   </td></tr>`;
 }
 
@@ -145,6 +149,21 @@ function renderCapitalRec(emailValue: string): string {
 // ourselves rather than rely on Resend injecting its pixel into our custom
 // broadcast HTML — see api/open.ts for why.
 const OPEN_PIXEL_BASE = 'https://daily-newsletter-one.vercel.app/api/open';
+
+// Our own click-tracking redirector (api/click.ts): counts the click, then 302s
+// to the real target. Same reason as the pixel — Resend's link rewriting never
+// recorded a click for our custom broadcasts. The endpoint only redirects to an
+// allowlisted host, so this is not an open redirect.
+const CLICK_BASE = 'https://daily-newsletter-one.vercel.app/api/click';
+function clickUrl(
+  target: string,
+  sendDateISO: string,
+  kind: 'cta' | 'link',
+): string {
+  return `${CLICK_BASE}?d=${encodeURIComponent(sendDateISO)}&k=${kind}&u=${encodeURIComponent(
+    target,
+  )}`;
+}
 
 export function renderNewsletter(
   nl: Newsletter,
@@ -204,7 +223,7 @@ ${sectionsHtml}
   <p style="margin:0;font-size:16px;line-height:1.6;color:${C.body};">${esc(nl.signoff)}</p>
 </td></tr>
 
-${renderCta()}
+${renderCta(sendDateISO)}
 
 ${renderCapitalRec(opts.recipientEmail ?? '')}
 
