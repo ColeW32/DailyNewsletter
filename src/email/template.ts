@@ -141,12 +141,28 @@ function renderCapitalRec(emailValue: string): string {
   </td></tr>`;
 }
 
+// Our own open-tracking pixel endpoint (DailyNewsletter Vercel app). We embed it
+// ourselves rather than rely on Resend injecting its pixel into our custom
+// broadcast HTML — see api/open.ts for why.
+const OPEN_PIXEL_BASE = 'https://daily-newsletter-one.vercel.app/api/open';
+
 export function renderNewsletter(
   nl: Newsletter,
   sources: SourceData[],
   dateLabel: string,
-  opts: { unsubscribeHref?: string; mailingAddress?: string; recipientEmail?: string } = {},
+  opts: {
+    unsubscribeHref?: string;
+    mailingAddress?: string;
+    recipientEmail?: string;
+    sendDateISO?: string;
+  } = {},
 ): string {
+  // yyyy-mm-dd (ET) the email is sent — opens bucket to this issue's date.
+  const sendDateISO =
+    opts.sendDateISO ??
+    new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(
+      new Date(),
+    );
   const byId = new Map(sources.map((s) => [s.id, s]));
   const order = sources.map((s) => s.id);
   const secs = Array.isArray(nl.sections) ? nl.sections : [];
@@ -201,6 +217,7 @@ ${renderCapitalRec(opts.recipientEmail ?? '')}
 </table>
 </td></tr>
 </table>
+<img src="${OPEN_PIXEL_BASE}?d=${esc(sendDateISO)}" width="1" height="1" alt="" style="display:block;width:1px;height:1px;max-height:1px;border:0;margin:0;padding:0;overflow:hidden;">
 </body>
 </html>`;
 }

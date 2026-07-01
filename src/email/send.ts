@@ -88,8 +88,6 @@ export async function sendBroadcast(opts: { subject: string; html: string }): Pr
     subject: opts.subject,
     html: sanitizeBroadcastHtml(opts.html),
     name: `Daily Brief — ${opts.subject}`,
-    open_tracking: true,
-    click_tracking: true,
   };
   const createRes = await resendPost('https://api.resend.com/broadcasts', headers, createBody);
   const created: any = await createRes.json().catch(() => ({}));
