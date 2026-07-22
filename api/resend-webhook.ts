@@ -1,7 +1,7 @@
 /**
  * POST /api/resend-webhook
  *
- * Resend webhook receiver for OUR newsletter (Survey Club Daily). Verifies the
+ * Resend webhook receiver for OUR newsletter (Earner's Club Daily). Verifies the
  * Resend/Svix signature (RESEND_WEBHOOK_SIGNING_SECRET) and records open/click
  * aggregates in Upstash Redis (via its REST API), keyed by the ET date the
  * event arrives.
