@@ -206,22 +206,28 @@ export function renderNewsletter(
 <tr><td align="center" style="padding:24px 12px;">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:100%;background:${C.card};border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(20,20,40,.06);">
 
-<tr><td style="background:#12c806;background-image:linear-gradient(135deg,#9df24d 0%,#22c50f 52%,#00a806 100%);padding:26px 30px;">
+<tr><td style="background:#5fc350;background-image:linear-gradient(135deg,#8fd85a 0%,#63c64e 55%,#4bbd48 100%);padding:22px 30px 26px;">
+  <!-- top accent row: chevrons (left) + dot grid (right) — tona-style geometric marks, entity glyphs so they render everywhere with no image loading -->
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
     <tr>
-      <td width="52" style="vertical-align:middle;">
-        <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-          <td align="center" valign="middle" bgcolor="#0a0a0a" width="46" height="46" style="width:46px;height:46px;border-radius:13px;font-size:22px;font-weight:900;color:#7bf03a;">E</td>
-        </tr></table>
+      <td valign="top" style="font-size:20px;line-height:1;font-weight:900;color:#ffffff;letter-spacing:2px;">&#8250;&#8250;&#8250;</td>
+      <td align="right" valign="top" style="font-size:8px;line-height:9px;letter-spacing:3px;color:#3a9a2f;font-weight:700;font-family:Arial,Helvetica,sans-serif;">
+        <div>&bull;&bull;&bull;&bull;&bull;</div><div>&bull;&bull;&bull;&bull;&bull;</div><div>&bull;&bull;&bull;&bull;&bull;</div><div>&bull;&bull;&bull;&bull;&bull;</div>
       </td>
-      <td style="vertical-align:middle;padding-left:13px;">
-        <div style="font-size:23px;font-weight:900;letter-spacing:-.01em;color:#0a0a0a;">Earner's Club</div>
-        <div style="margin-top:2px;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#0f3d06;">Daily Brief · ${esc(dateLabel)}</div>
-      </td>
-      <td align="right" valign="top" style="font-size:15px;font-weight:900;color:#0a0a0a;line-height:1;letter-spacing:2px;">›››</td>
     </tr>
   </table>
-  <p style="margin:15px 0 0;font-size:14px;line-height:1.5;color:#0a2b02;font-weight:600;max-width:450px;">Learn the market, watch your bank account grow over time. It starts here with a 5-min daily read.</p>
+  <!-- wordmark (no logo badge) -->
+  <div style="margin-top:14px;font-size:27px;font-weight:900;letter-spacing:-.02em;color:#0a0a0a;line-height:1.05;">Earner's Club</div>
+  <div style="margin-top:4px;font-size:11px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:#0f3d06;">Daily Brief &middot; ${esc(dateLabel)}</div>
+  <!-- subtext (two lines) + bottom-right chevron accent -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td valign="bottom">
+        <p style="margin:14px 0 0;font-size:14px;line-height:1.55;color:#0a2b02;font-weight:600;max-width:470px;">Learn the market and watch your bank account grow over time.<br>It starts here with your 5-min daily read.</p>
+      </td>
+      <td width="46" align="right" valign="bottom" style="font-size:18px;line-height:1;font-weight:900;color:#ffffff;letter-spacing:2px;">&#8250;&#8250;&#8250;</td>
+    </tr>
+  </table>
 </td></tr>
 
 <tr><td style="padding:26px 32px 4px;">
