@@ -33,7 +33,7 @@ always-on endpoint).
 | `RESEND_API_KEY` | your Resend key |
 | `RESEND_AUDIENCE_ID` | the Audience ID from step 1 |
 | `SUBSCRIBE_SECRET` | a random string (`openssl rand -hex 32`) |
-| `NEWSLETTER_FROM` | `Survey Club Daily <daily@daily.getsurvey.club>` |
+| `NEWSLETTER_FROM` | `Earner's Club Daily <daily@daily.getsurvey.club>` |
 | `CONFIRM_BASE_URL` | your deployed URL, e.g. `https://subscribe.getsurvey.club` |
 | `ALLOWED_ORIGINS` | *(optional)* CSV of site origins; omit to allow all |
 

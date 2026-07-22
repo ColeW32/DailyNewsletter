@@ -27,7 +27,7 @@ export async function sendAlert(subject: string, text: string): Promise<void> {
     await resend.emails.send({
       from: config.from,
       to: config.adminEmail,
-      subject: `⚠️ Survey Club Daily: ${subject}`,
+      subject: `⚠️ Earner's Club Daily: ${subject}`,
       text,
     });
     console.log(`📧 Alert sent to ${config.adminEmail}.`);

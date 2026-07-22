@@ -1,6 +1,6 @@
-# Survey Club Daily — Subscribe API (Partner Integration)
+# Earner's Club Daily — Subscribe API (Partner Integration)
 
-Add a "Subscribe to **Survey Club Daily**" box to your app. The reader enters their
+Add a "Subscribe to **Earner's Club Daily**" box to your app. The reader enters their
 email, taps **Subscribe**, and we email them a one-click confirmation link. Once they
 click it, they're subscribed. You build the UI; we handle sending, confirmation, and
 unsubscribes.
@@ -46,7 +46,7 @@ Any extra fields are ignored.
 [ your UI: email + Subscribe ]
       │  POST /api/subscribe { email }
       ▼
-[ Survey Club ] ── validates, blocks spam, sends a confirmation email
+[ Earner's Club ] ── validates, blocks spam, sends a confirmation email
       │
       ▼
 [ subscriber clicks the link in their inbox ]

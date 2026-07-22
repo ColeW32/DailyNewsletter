@@ -18,7 +18,7 @@ import { resolveMx, resolve } from 'node:dns/promises';
 
 const SECRET = (process.env.SUBSCRIBE_SECRET || '').trim();
 const RESEND_API_KEY = (process.env.RESEND_API_KEY || '').trim();
-const FROM = (process.env.NEWSLETTER_FROM || 'Survey Club Daily <daily@daily.getsurvey.club>').trim();
+const FROM = (process.env.NEWSLETTER_FROM || "Earner's Club Daily <daily@daily.getsurvey.club>").trim();
 const CONFIRM_BASE = (process.env.CONFIRM_BASE_URL || '').trim();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -132,7 +132,7 @@ export default async function handler(req: any, res: any) {
       body: JSON.stringify({
         from: FROM,
         to: email,
-        subject: 'Confirm your Survey Club Daily subscription',
+        subject: "Confirm your Earner's Club Daily subscription",
         html: confirmEmailHtml(confirmUrl),
       }),
     });
@@ -149,10 +149,10 @@ function confirmEmailHtml(url: string): string {
   return `<!doctype html><html><body style="margin:0;background:#f4f5f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f7;"><tr><td align="center" style="padding:32px 12px;">
   <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="width:520px;max-width:100%;background:#fff;border-radius:16px;overflow:hidden;">
-    <tr><td style="background:#000;padding:24px 28px;"><div style="font-size:20px;font-weight:900;color:#fff;">Survey Club</div></td></tr>
+    <tr><td style="background:#000;padding:24px 28px;"><div style="font-size:20px;font-weight:900;color:#fff;">Earner's Club</div></td></tr>
     <tr><td style="padding:28px;">
       <h1 style="margin:0 0 12px;font-size:22px;color:#1a1a1a;">One quick tap to confirm</h1>
-      <p style="margin:0 0 22px;font-size:16px;line-height:1.6;color:#3a3a42;">Tap below to confirm your subscription to the <strong>Survey Club Daily Brief</strong> — markets, business &amp; AI, written to actually be fun. If you didn't request this, just ignore this email.</p>
+      <p style="margin:0 0 22px;font-size:16px;line-height:1.6;color:#3a3a42;">Tap below to confirm your subscription to the <strong>Earner's Club Daily Brief</strong> — markets, business &amp; AI, written to actually be fun. If you didn't request this, just ignore this email.</p>
       <table role="presentation" cellpadding="0" cellspacing="0"><tr><td align="center" bgcolor="#00C805" style="border-radius:999px;">
         <a href="${url}" style="display:inline-block;padding:15px 30px;font-size:16px;font-weight:800;color:#000;text-decoration:none;">Confirm my subscription →</a>
       </td></tr></table>

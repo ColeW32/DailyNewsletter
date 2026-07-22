@@ -12,7 +12,7 @@ import type { Newsletter } from '../src/writer/writeNewsletter';
 const sources = await collectSources();
 
 const nl: Newsletter = {
-  subject: '[design preview] Survey Club Daily Brief',
+  subject: "[design preview] Earner's Club Daily Brief",
   preheader: 'Layout preview with raw source data — real copy is written by Claude.',
   intro:
     'This is a layout preview built from raw source data. The real edition is written by Claude in a fun, conversational voice — this just shows the design.',

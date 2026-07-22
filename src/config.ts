@@ -24,7 +24,7 @@ export const config = {
   resendApiKey: () => required('RESEND_API_KEY'),
   // .trim() everything: GitHub Variables/Secrets and .env values can carry a stray
   // trailing newline — and Resend 500s on e.g. an audience_id with a "\n" in it.
-  from: (process.env.NEWSLETTER_FROM ?? 'Survey Club Daily <daily@daily.getsurvey.club>').trim(),
+  from: (process.env.NEWSLETTER_FROM ?? "Earner's Club Daily <daily@daily.getsurvey.club>").trim(),
   to: (process.env.NEWSLETTER_TO ?? 'jason@abstrakt.group').trim(),
   adminEmail: (process.env.ADMIN_EMAIL ?? process.env.NEWSLETTER_TO ?? 'jason@abstrakt.group').trim(),
   audienceId: process.env.RESEND_AUDIENCE_ID?.trim(),

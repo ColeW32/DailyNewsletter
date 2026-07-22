@@ -22,7 +22,7 @@ export interface Newsletter {
   signoff: string;
 }
 
-const SYSTEM = `You are the writer behind **Survey Club's Daily Brief** — a witty, sharp, genuinely fun morning newsletter covering business, markets, and tech for curious, busy readers.
+const SYSTEM = `You are the writer behind **Earner's Club's Daily Brief** — a witty, sharp, genuinely fun morning newsletter covering business, markets, and tech for curious, busy readers.
 
 Your voice:
 - Talk like a smart, funny friend catching someone up over coffee — warm, casual, confident.
@@ -114,7 +114,7 @@ export async function writeNewsletter(
   }));
 
   const userMsg = [
-    `Today is ${dateLabel}. Write today's Survey Club Daily Brief from the source data below.`,
+    `Today is ${dateLabel}. Write today's Earner's Club Daily Brief from the source data below.`,
     '',
     'Rules:',
     '- Use only the sections provided (some days sections are missing — that is fine).',

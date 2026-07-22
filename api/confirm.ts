@@ -53,7 +53,7 @@ export default async function handler(req: any, res: any) {
     return res.status(502).send(page('Hmm, that didn’t work', 'We couldn’t confirm you just now — please try again shortly.'));
   }
 
-  // Report the completed double opt-in to the Survey Club backend for the admin
+  // Report the completed double opt-in to the Earner's Club backend for the admin
   // dashboard's daily-confirms stats. Best-effort: a stats hiccup must never
   // break the user's confirmation (await so Vercel doesn't kill the request,
   // but swallow every failure).
@@ -73,14 +73,14 @@ export default async function handler(req: any, res: any) {
     // non-fatal
   }
 
-  return res.status(200).send(page("You're in! 🎉", "You'll get the Survey Club Daily Brief every morning. Welcome aboard."));
+  return res.status(200).send(page("You're in! 🎉", "You'll get the Earner's Club Daily Brief every morning. Welcome aboard."));
 }
 
 function page(title: string, body: string): string {
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title></head>
   <body style="margin:0;background:#f4f5f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
   <div style="max-width:520px;margin:8% auto;background:#fff;border-radius:16px;overflow:hidden;">
-    <div style="background:#000;padding:22px 28px;"><div style="font-size:20px;font-weight:900;color:#fff;">Survey Club</div></div>
+    <div style="background:#000;padding:22px 28px;"><div style="font-size:20px;font-weight:900;color:#fff;">Earner's Club</div></div>
     <div style="padding:32px 28px;">
       <h1 style="margin:0 0 10px;font-size:24px;color:#1a1a1a;">${title}</h1>
       <p style="margin:0;font-size:16px;line-height:1.6;color:#3a3a42;">${body}</p>

@@ -12,7 +12,7 @@ folder:
 ```bash
 git init
 git add .
-git commit -m "Survey Club daily newsletter"
+git commit -m "Earner's Club daily newsletter"
 git branch -M main
 git remote add origin https://github.com/<you>/survey-club-newsletter.git
 git push -u origin main
@@ -62,6 +62,6 @@ unsubscribe link + the mailing address in the footer. Remove the variables (or s
 
 ## If a run fails
 
-You'll get an email titled **"⚠️ Survey Club Daily: …"** with the error, and the
+You'll get an email titled **"⚠️ Earner's Club Daily: …"** with the error, and the
 Actions run will show red. Common causes: out of Anthropic credits, or a source
 site changing its markup (that section just gets skipped).

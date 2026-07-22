@@ -1,4 +1,4 @@
-# Survey Club — Daily Newsletter
+# Earner's Club — Daily Newsletter
 
 An AI-written daily newsletter. Each morning a job **collects** data from a set of
 sources, Claude **writes** it up in a fun, easy-to-read voice, and it gets **sent**

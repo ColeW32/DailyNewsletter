@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Daily AI-written newsletter for Survey Club",
+  "description": "Daily AI-written newsletter for Earner's Club",
   "scripts": {
     "generate": "tsx src/index.ts",
     "preview": "tsx src/index.ts --dry-run",

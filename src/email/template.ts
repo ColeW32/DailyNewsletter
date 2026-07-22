@@ -206,11 +206,22 @@ export function renderNewsletter(
 <tr><td align="center" style="padding:24px 12px;">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:100%;background:${C.card};border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(20,20,40,.06);">
 
-<tr><td style="background:${C.headerBg};padding:26px 32px;">
-  <div style="font-size:22px;font-weight:900;letter-spacing:.01em;color:#ffffff;">Survey Club</div>
-  <div style="margin-top:5px;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:${C.green};">Daily Brief · ${esc(
-    dateLabel,
-  )}</div>
+<tr><td style="background:#12c806;background-image:linear-gradient(135deg,#9df24d 0%,#22c50f 52%,#00a806 100%);padding:26px 30px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td width="52" style="vertical-align:middle;">
+        <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+          <td align="center" valign="middle" bgcolor="#0a0a0a" width="46" height="46" style="width:46px;height:46px;border-radius:13px;font-size:22px;font-weight:900;color:#7bf03a;">E</td>
+        </tr></table>
+      </td>
+      <td style="vertical-align:middle;padding-left:13px;">
+        <div style="font-size:23px;font-weight:900;letter-spacing:-.01em;color:#0a0a0a;">Earner's Club</div>
+        <div style="margin-top:2px;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#0f3d06;">Daily Brief · ${esc(dateLabel)}</div>
+      </td>
+      <td align="right" valign="top" style="font-size:15px;font-weight:900;color:#0a0a0a;line-height:1;letter-spacing:2px;">›››</td>
+    </tr>
+  </table>
+  <p style="margin:15px 0 0;font-size:14px;line-height:1.5;color:#0a2b02;font-weight:600;max-width:450px;">Learn the market, watch your bank account grow over time. It starts here with a 5-min daily read.</p>
 </td></tr>
 
 <tr><td style="padding:26px 32px 4px;">
@@ -228,8 +239,8 @@ ${renderCta(sendDateISO)}
 ${renderCapitalRec(opts.recipientEmail ?? '')}
 
 <tr><td style="padding:24px 32px 32px;">
-  <p style="margin:0;font-size:12px;line-height:1.5;color:${C.muted};">You're reading the Survey Club Daily Brief — curated from public sources and written up by AI. Double-check anything before you bet the farm on it.</p>
-  ${opts.mailingAddress ? `<p style="margin:10px 0 0;font-size:12px;color:${C.muted};">Survey Club · ${esc(opts.mailingAddress)}</p>` : ''}
+  <p style="margin:0;font-size:12px;line-height:1.5;color:${C.muted};">You're reading the Earner's Club Daily Brief — curated from public sources and written up by AI. Double-check anything before you bet the farm on it.</p>
+  ${opts.mailingAddress ? `<p style="margin:10px 0 0;font-size:12px;color:${C.muted};">Earner's Club · ${esc(opts.mailingAddress)}</p>` : ''}
   <p style="margin:6px 0 0;font-size:12px;color:${C.muted};"><a href="${esc(opts.unsubscribeHref ?? '#')}" style="color:${C.muted};text-decoration:underline;">Unsubscribe</a></p>
 </td></tr>
 
