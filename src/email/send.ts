@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { config } from '../config';
+import { todayInET } from '../utils/date';
 
 export async function sendEmail(opts: {
   subject: string;
@@ -87,7 +88,11 @@ export async function sendBroadcast(opts: { subject: string; html: string }): Pr
     from: config.from,
     subject: opts.subject,
     html: sanitizeBroadcastHtml(opts.html),
-    name: `Daily Brief — ${opts.subject}`,
+    // Resend caps broadcast `name` at 70 chars. The old value interpolated the
+    // AI-written subject, which overflowed on long-subject days → 422 → the whole
+    // send aborted (e.g. 2026-07-21). The name is just an internal dashboard label,
+    // so use the short, unique send date instead — always well under the limit.
+    name: `Daily Brief — ${todayInET()}`,
   };
   const createRes = await resendPost('https://api.resend.com/broadcasts', headers, createBody);
   const created: any = await createRes.json().catch(() => ({}));
