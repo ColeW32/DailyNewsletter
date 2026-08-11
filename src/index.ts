@@ -1,11 +1,20 @@
 import { writeFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { collectSources } from './sources';
-import { writeNewsletter } from './writer/writeNewsletter';
+import { writeNewsletter, type EditionMode } from './writer/writeNewsletter';
 import { enrichWithResearch } from './writer/enrich';
 import { renderNewsletter } from './email/template';
 import { sendEmail, sendAlert, sendBroadcast, broadcastSentToday } from './email/send';
-import { longDateET } from './utils/date';
+import { fetchRecentEditions } from './history/recentEditions';
+import { longDateET, dayOfWeekET } from './utils/date';
 import { config } from './config';
+
+/** Sat/Sun (ET) switch to recap/week-ahead editions. EDITION_MODE=daily|weekend-sat|weekend-sun overrides (testing). */
+function editionMode(): EditionMode {
+  const forced = process.env.EDITION_MODE?.trim();
+  if (forced === 'daily' || forced === 'weekend-sat' || forced === 'weekend-sun') return forced;
+  const dow = dayOfWeekET();
+  return dow === 6 ? 'weekend-sat' : dow === 0 ? 'weekend-sun' : 'daily';
+}
 
 async function main() {
   const args = new Set(process.argv.slice(2));
@@ -53,9 +62,20 @@ async function main() {
     ),
   );
 
+  const mode = editionMode();
+  if (mode !== 'daily') console.log(`\n🗓️  Weekend edition: ${mode === 'weekend-sat' ? 'week in review (Saturday)' : 'week ahead (Sunday)'}`);
+
+  console.log('\n🧠 Loading recent editions for continuity...');
+  const recent = await fetchRecentEditions(7);
+  console.log(
+    recent.length
+      ? `   ${recent.length} loaded (latest: ${recent[0].date} — "${recent[0].subject}")`
+      : '   none available — writing without history.',
+  );
+
   console.log('\n✍️  Writing the newsletter with Claude...');
   const label = longDateET();
-  const nl = await writeNewsletter(enriched, label);
+  const nl = await writeNewsletter(enriched, label, { recent, mode });
 
   // Safety net: never send an empty newsletter (writer returned no sections).
   if (!Array.isArray(nl.sections) || nl.sections.length === 0) {

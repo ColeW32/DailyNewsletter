@@ -14,6 +14,21 @@ by email — automatically skipping any section whose data didn't show up that d
 | 🤖 AI Brief | Ben's Bites / TLDR AI | Top 2 AI stories |
 | 📊 Markets Snapshot | Yahoo Finance (→ Polygon/FMP) | S&P 500, Nasdaq, 10Y, Bitcoin, Oil |
 
+## Editions & continuity
+
+- **Mon–Fri:** normal daily brief. The writer is given the last ~7 sent editions
+  (pulled from Resend, which stores every broadcast; each email embeds a
+  machine-readable `ec-meta` summary of itself) so it never repeats a recent
+  subject or re-tells a covered story — follow-ups get "the saga continues"
+  framing instead. A too-similar subject triggers an automatic rewrite.
+- **Saturday:** week-in-review edition (📅 The Week That Was + 🔮 The Week Ahead),
+  recapped from the week's own editions. Weekday sources are stale on weekends
+  and are treated as background, never as news.
+- **Sunday:** week-ahead edition (🔮 lead + ⚡ ICYMI quick hits), angled away from
+  Saturday's recap.
+- Same template, header, CTA, and footer on all days — only the content plan changes.
+- Testing override: `EDITION_MODE=weekend-sat npm run preview` (or `weekend-sun` / `daily`).
+
 ## Stack
 
 - **Node + TypeScript** (run with `tsx`)

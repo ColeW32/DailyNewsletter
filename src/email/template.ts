@@ -192,6 +192,30 @@ export function renderNewsletter(
     .map((sec) => renderSection(sec, byId.get(sec.id)))
     .join('\n');
 
+  // Machine-readable self-summary, embedded as an HTML comment. Tomorrow's run
+  // reads it back from Resend's stored broadcast (see history/recentEditions.ts)
+  // so the writer knows what was already covered. Base64 keeps it clear of the
+  // broadcast merge-tag sanitizer (no braces) and email clients ignore comments.
+  const meta = {
+    v: 1,
+    date: sendDateISO,
+    subject: nl.subject,
+    preheader: nl.preheader,
+    stories: ordered
+      .filter((sec) => sec.id !== 'markets-snapshot')
+      .flatMap((sec) =>
+        (sec.blurbs ?? []).map((b) => ({
+          section: sec.title,
+          headline: (b.heading ?? b.body ?? '').slice(0, 110),
+          body: (b.body ?? '').slice(0, 240),
+          url: b.url,
+        })),
+      )
+      .filter((s) => s.headline)
+      .slice(0, 14),
+  };
+  const metaComment = `<!-- ec-meta:${Buffer.from(JSON.stringify(meta), 'utf8').toString('base64')} -->`;
+
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -202,6 +226,7 @@ export function renderNewsletter(
 </head>
 <body style="margin:0;padding:0;background:${C.pageBg};-webkit-font-smoothing:antialiased;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(nl.preheader)}</div>
+${metaComment}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.pageBg};">
 <tr><td align="center" style="padding:24px 12px;">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:100%;background:${C.card};border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(20,20,40,.06);">
