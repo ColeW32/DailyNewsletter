@@ -59,9 +59,12 @@ export default async function handler(req: any, res: any) {
   // but swallow every failure).
   // Note: 409/422 (already confirmed) also lands here — re-confirms are rare
   // enough that we accept the slight overcount rather than complicate this.
+  // Token shared with SurveyClub-Backend (NEWSLETTER_CONFIRMED_TOKEN). Set in Vercel.
+  const confirmToken = (process.env.SURVEYCLUB_CONFIRM_TOKEN || '').trim();
   try {
+    if (!confirmToken) throw new Error('SURVEYCLUB_CONFIRM_TOKEN is not set');
     await fetch(
-      'https://api.getsurvey.club/newsletters/events/confirmed?token=dbc8e6e0b3600d978076a7712dedd1cdf57f6398',
+      `https://api.getsurvey.club/newsletters/events/confirmed?token=${encodeURIComponent(confirmToken)}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -69,8 +72,9 @@ export default async function handler(req: any, res: any) {
         signal: AbortSignal.timeout(3000),
       },
     );
-  } catch {
-    // non-fatal
+  } catch (err) {
+    // non-fatal for the subscriber; logged so a missing token shows up
+    console.warn('confirm stats ping failed:', err);
   }
 
   return res.status(200).send(page("You're in! 🎉", "You'll get the Earner's Club Daily Brief every morning. Welcome aboard."));

@@ -26,8 +26,8 @@ const KV_TOKEN = (
   ''
 ).trim();
 
-// Shared with SurveyClub-Backend (newsletters.service.ts DAILY_STATS_TOKEN).
-const STATS_TOKEN = 'ad0e35507ae7bb925c715ebdb1cd87d4d4749081';
+// Shared with SurveyClub-Backend (DAILY_STATS_TOKEN in its prod secret). Set in Vercel.
+const STATS_TOKEN = (process.env.SURVEYCLUB_STATS_TOKEN || '').trim();
 const STATS_WINDOW_DAYS = 30;
 
 type DayStat = { date: string; opens: number; clicks: number; ctaClicks: number };
@@ -73,7 +73,7 @@ async function readDailyStats(dates: string[]): Promise<DayStat[]> {
 }
 
 export default async function handler(req: any, res: any) {
-  if (String(req.query?.token || '') !== STATS_TOKEN) {
+  if (!STATS_TOKEN || String(req.query?.token || '') !== STATS_TOKEN) {
     return res.status(401).json({ error: 'Invalid token' });
   }
   if (!RESEND_API_KEY || !AUDIENCE_ID) {
